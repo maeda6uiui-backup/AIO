@@ -24,19 +24,15 @@ class LinearClassifier(BertForMultipleChoice):
 
         self.init_weights()
 
-    def create_pooled_text_embeddings(self,batch_inputs,num_options=4):
-        #num_options=batch_inputs["input_ids"].size(0)
+    def create_pooled_text_embeddings(self,batch_inputs):
+        num_options=batch_inputs["input_ids"].size(0)
         ret=torch.empty(num_options,self.config.hidden_size).to(device)
 
-        indices=random.sample(range(20),k=num_options)
-        indices.sort()
-        indices[0]=0
-
-        for i,index in enumerate(indices):
+        for i in range(num_options):
             option_inputs={
-                "input_ids":batch_inputs["input_ids"][index].unsqueeze(0),
-                "attention_mask":batch_inputs["attention_mask"][index].unsqueeze(0),
-                "token_type_ids":batch_inputs["token_type_ids"][index].unsqueeze(0),
+                "input_ids":batch_inputs["input_ids"][i].unsqueeze(0),
+                "attention_mask":batch_inputs["attention_mask"][i].unsqueeze(0),
+                "token_type_ids":batch_inputs["token_type_ids"][i].unsqueeze(0),
             }
 
             outputs=self.bert(**option_inputs)
@@ -50,9 +46,9 @@ class LinearClassifier(BertForMultipleChoice):
         attention_mask=None,
         token_type_ids=None,
         labels=None,
-        num_options=4
     ):
         batch_size=input_ids.size(0)
+        num_options=input_ids.size(1)
 
         text_embeddings=torch.empty(batch_size,num_options,self.config.hidden_size).to(device)
         for i in range(batch_size):
@@ -62,7 +58,7 @@ class LinearClassifier(BertForMultipleChoice):
                 "token_type_ids":token_type_ids[i]
             }
 
-            text_embeddings[i]=self.create_pooled_text_embeddings(batch_inputs,num_options=num_options)
+            text_embeddings[i]=self.create_pooled_text_embeddings(batch_inputs)
 
         text_embeddings=text_embeddings.view(-1,self.config.hidden_size)
         logits=self.classifier(text_embeddings)

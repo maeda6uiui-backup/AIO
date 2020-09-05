@@ -89,27 +89,54 @@ def train(classifier_model,optimizer,scheduler,dataloader):
 
     for batch_idx,batch in enumerate(dataloader):
         batch = tuple(t for t in batch)
+        batch_size=batch[0].size(0)
         bert_inputs = {
             "input_ids": batch[0].to(device),
             "attention_mask": batch[1].to(device),
             "token_type_ids": batch[2].to(device),
             "labels": batch[3].to(device),
-            "num_options":4
         }
 
-        # Initialize gradiants
-        optimizer.zero_grad()
-        # Forward propagation
-        classifier_outputs=classifier_model(**bert_inputs)
-        loss=classifier_outputs[0]
-        # Backward propagation
-        loss.backward()
-        # Update parameters
-        optimizer.step()
-        scheduler.step()
+        base_index=1
+        for i in range(7):
+            if i==6:
+                option_indices=[0,base_index]
+            else:
+                option_indices=[0,base_index,base_index+1,base_index+2]
+                base_index+=3
 
-        count_steps+=1
-        total_loss+=loss.item()
+            i_input_ids=torch.empty(batch_size,len(option_indices),512,dtype=torch.long).to(device)
+            i_attention_mask=torch.empty(batch_size,len(option_indices),512,dtype=torch.long).to(device)
+            i_token_type_ids=torch.empty(batch_size,len(option_indices),512,dtype=torch.long).to(device)
+            i_labels=torch.empty(batch_size,dtype=torch.long).to(device)
+
+            for j in range(batch_size):
+                for k,index in enumerate(option_indices):
+                    i_input_ids[j,k]=bert_inputs["input_ids"][j,index]
+                    i_attention_mask[j,k]=bert_inputs["attention_mask"][j,index]
+                    i_token_type_ids[j,k]=bert_inputs["token_type_ids"][j,index]
+                i_labels[j]=bert_inputs["labels"][j]
+
+            i_bert_inputs={
+                "input_ids":i_input_ids,
+                "attention_mask":i_attention_mask,
+                "token_type_ids":i_token_type_ids,
+                "labels":i_labels
+            }
+
+            # Initialize gradiants
+            optimizer.zero_grad()
+            # Forward propagation
+            classifier_outputs=classifier_model(**i_bert_inputs)
+            loss=classifier_outputs[0]
+            # Backward propagation
+            loss.backward()
+            # Update parameters
+            optimizer.step()
+            scheduler.step()
+
+            count_steps+=1
+            total_loss+=loss.item()
 
         if batch_idx%100==0:
             logger.info("Step: {}\tLoss: {}\tlr: {}".format(
@@ -133,7 +160,6 @@ def evaluate(classifier_model,dataloader):
                 "attention_mask": batch[1].to(device),
                 "token_type_ids": batch[2].to(device),
                 "labels": batch[3].to(device),
-                "num_options":20
             }
 
             classifier_outputs=classifier_model(**bert_inputs)
