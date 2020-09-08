@@ -78,29 +78,29 @@ class ConvClassifier(BertForMultipleChoice):
         self.config=config
 
         self.conv=nn.Sequential(
-            nn.Conv2d(1,3,8,4,2),  #(N,32,128,192)
+            nn.Conv2d(1,32,8,4,2),  #(N,32,128,192)
             nn.LeakyReLU(0.2),
 
-            nn.Conv2d(3,8,8,4,2), #(N,64,32,48)
-            nn.BatchNorm2d(8),
+            nn.Conv2d(32,64,8,4,2), #(N,64,32,48)
+            nn.BatchNorm2d(64),
             nn.LeakyReLU(0.2),
 
-            nn.Conv2d(8,16,8,4,2), #(N,128,8,12)
-            nn.BatchNorm2d(16),
+            nn.Conv2d(64,128,8,4,2), #(N,128,8,12)
+            nn.BatchNorm2d(128),
             nn.LeakyReLU(0.2),
 
-            nn.Conv2d(16,32,8,4,2), #(N,256,2,3)
-            nn.BatchNorm2d(32),
+            nn.Conv2d(128,256,8,4,2), #(N,256,2,3)
+            nn.BatchNorm2d(256),
             nn.LeakyReLU(0.2),
 
-            nn.Conv2d(32,64,(2,3),1,0), #(N,512,1,1)
+            nn.Conv2d(256,512,(2,3),1,0), #(N,512,1,1)
         )
         self.classifier=nn.Sequential(
-            nn.Linear(64,32),
+            nn.Linear(512,256),
             nn.LeakyReLU(0.2),
-            nn.Linear(32,32),
+            nn.Linear(256,256),
             nn.LeakyReLU(0.2),
-            nn.Linear(32,1)
+            nn.Linear(256,1)
         )
 
         self.init_weights()
