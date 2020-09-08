@@ -78,7 +78,7 @@ def encode_plus(juman,tokenizer,text_a,text_b,max_length=512):
 
     #Text B (Context)
     text_b=jaconv.h2z(text_b,kana=True,digit=True,ascii=True)
-    splits=re.split("(?<=[。])", text_b)
+    splits=re.split("(?<=[、。　])", text_b)
 
     tokens_b=[]
     for split in splits:
@@ -99,7 +99,7 @@ def encode_plus(juman,tokenizer,text_a,text_b,max_length=512):
     if len_a+len_b>max_length:
         input_ids_b=input_ids_b[:max_length-len_a]
         input_ids_b[max_length-len_a-1]=3   #[SEP]
-    elif len_a+len_b<max_length-3:
+    elif len_a+len_b<max_length:
         padding_length=max_length-(len_a+len_b)-1
         input_ids_b=input_ids_b+[3]+[0 for i in range(padding_length)]
 
