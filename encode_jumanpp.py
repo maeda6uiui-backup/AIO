@@ -171,8 +171,11 @@ def main(bert_vocab_filepath,example_filepath,context_filepath,cache_save_dir):
     #Juman++
     juman=Juman(jumanpp=True)
 
+    logger.info("Cache files will be saved in {}.".format(cache_save_dir))
+
     #Tokenizer
-    tokenizer = BertTokenizer.from_pretrained(bert_vocab_filepath)
+    logger.info("Create a tokenizer from {}.".format(bert_vocab_filepath))
+    tokenizer = BertTokenizer.from_pretrained(bert_vocab_filepath,do_lower_case=False)
 
     logger.info("Start loading examples from {}.".format(example_filepath))
     examples=load_examples(example_filepath)
