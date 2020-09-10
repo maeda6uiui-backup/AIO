@@ -72,6 +72,7 @@ def train(classifier_model,optimizer,scheduler,dataloader):
         # Backward propagation
         loss.backward()
         # Update parameters
+        nn.utils.clip_grad_norm_(classifier_model.parameters(),1.0)
         optimizer.step()
         scheduler.step()
 
@@ -148,7 +149,7 @@ def main(batch_size,num_epochs,lr,bert_model_dir,train_input_dir,dev1_input_dir,
     classifier_model.to(device)
 
     #Create an optimizer and a scheduler.
-    optimizer=AdamW(classifier_model.parameters(),lr=lr,eps=1e-8)
+    optimizer=AdamW(classifier_model.parameters(),lr=lr)
     total_steps = len(train_dataloader)*num_epochs
     scheduler = get_linear_schedule_with_warmup(
         optimizer, num_warmup_steps=0, num_training_steps=total_steps
