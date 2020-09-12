@@ -7,6 +7,7 @@ import sys
 from tqdm import tqdm
 import torch
 from transformers import BertJapaneseTokenizer
+import jaconv
 
 #Set up a logger.
 logging_fmt = "%(asctime)s %(levelname)s: %(message)s"
@@ -59,6 +60,19 @@ def load_contexts(context_filepath):
 
     return contexts
 
+def parse_with_mecab(mecab,text):
+    mecab.parse("")
+    node=mecab.parseToNode(text)
+
+    tokens=[]
+    while node:
+        word=node.surface
+        tokens.append(word)
+
+        node=node.next
+
+    return tokens
+
 def encode_examples(tokenizer,examples,contexts,max_seq_length):
     input_ids=torch.empty(len(examples),NUM_OPTIONS,max_seq_length,dtype=torch.long)
     attention_mask=torch.empty(len(examples),NUM_OPTIONS,max_seq_length,dtype=torch.long)
@@ -68,9 +82,13 @@ def encode_examples(tokenizer,examples,contexts,max_seq_length):
     for example_index,example in enumerate(tqdm(examples)):
         #Process every option.
         for option_index,ending in enumerate(example.endings):
+            str_question=jaconv.h2z(example.question,kana=True,digit=True,ascii=True)
+            str_ending=jaconv.h2z(ending,kana=True,digit=True,ascii=True)
+            str_context=jaconv.h2z(contexts[ending],kana=True,digit=True,ascii=True)
+
             #Text features
-            text_a=example.question+"[SEP]"+ending
-            text_b=contexts[ending]
+            text_a=str_question+"[SEP]"+str_ending
+            text_b=str_context
 
             encoding = tokenizer.encode_plus(
                 text_a,
@@ -92,7 +110,7 @@ def encode_examples(tokenizer,examples,contexts,max_seq_length):
             token_type_ids[example_index,option_index]=token_type_ids_tmp
             attention_mask[example_index,option_index]=attention_mask_tmp
 
-            if example_index==0:
+            if example_index==0 and option_index<4:
                 logger.info("option_index={}".format(option_index))
                 logger.info("text_a: {}".format(text_a[:512]))
                 logger.info("text_b: {}".format(text_b[:512]))
@@ -104,9 +122,12 @@ def encode_examples(tokenizer,examples,contexts,max_seq_length):
 
     return input_ids,attention_mask,token_type_ids,labels
 
-def main(example_filepath,context_filepath,cache_save_dir):
+def main(bert_vocab_filepath,example_filepath,context_filepath,cache_save_dir):
+    logger.info("Cache files will be saved in {}.".format(cache_save_dir))
+
     #Tokenizer
-    tokenizer = BertJapaneseTokenizer.from_pretrained("cl-tohoku/bert-base-japanese-whole-word-masking")
+    logger.info("Create a tokenizer from {}.".format(bert_vocab_filepath))
+    tokenizer = BertJapaneseTokenizer.from_pretrained(bert_vocab_filepath)
 
     logger.info("Start loading examples from {}.".format(example_filepath))
     examples=load_examples(example_filepath)
@@ -131,10 +152,11 @@ def main(example_filepath,context_filepath,cache_save_dir):
 if __name__=="__main__":
     parser=argparse.ArgumentParser(description="AIO")
 
+    parser.add_argument("--bert_vocab_filepath",type=str,default="~/BERTModels/NICT_BERT-base_JapaneseWikipedia_100K/vocab.txt")
     parser.add_argument("--example_filepath",type=str,default="~/AIOData/train_questions.json")
     parser.add_argument("--context_filepath",type=str,default="~/AIOData/candidate_entities.json.gz")
     parser.add_argument("--cache_save_dir",type=str,default="~/EncodedCache/Train")
 
     args=parser.parse_args()
 
-    main(args.example_filepath,args.context_filepath,args.cache_save_dir)
+    main(args.bert_vocab_filepath,args.example_filepath,args.context_filepath,args.cache_save_dir)
