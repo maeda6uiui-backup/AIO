@@ -7,8 +7,19 @@ class LinearClassifier(BertForMultipleChoice):
         super().__init__(config)
 
         self.classifier=nn.Sequential(
-            #nn.Dropout(config.hidden_dropout_prob),
             nn.Linear(config.hidden_size,1)
         )
 
         self.init_weights()
+
+class DoubleLinearClassifier(nn.Module):
+    def __init__(self,num_options=20):
+        super().__init__()
+
+        self.classifier=nn.Sequential(
+            nn.Linear(2*num_options,num_options)
+        )
+
+    def forward(self,logits_1,logits_2):
+        logits=torch.cat([logits_1,logits_2],dim=1)
+        return self.classifier(logits)
