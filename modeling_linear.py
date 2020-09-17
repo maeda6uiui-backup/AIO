@@ -17,7 +17,7 @@ from transformers import(
 from models import LinearClassifier
 
 #Fix the seed.
-SEED=1000
+SEED=42
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
