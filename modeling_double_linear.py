@@ -14,7 +14,7 @@ from transformers import BertConfig
 from models import LinearClassifier,DoubleLinearClassifier
 
 #Fix the seed.
-SEED=42
+SEED=1000
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
