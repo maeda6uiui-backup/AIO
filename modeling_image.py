@@ -320,7 +320,7 @@ def main(batch_size,num_epochs,lr,train_input_dir,dev1_input_dir,im_embeddings_d
     logger.info("Finished model training.")
 
 if __name__=="__main__":
-    parser=argparse.ArgumentParser(description="VisualAIO2")
+    parser=argparse.ArgumentParser(description="AIO")
 
     parser.add_argument("--batch_size",type=int,default=4)
     parser.add_argument("--num_epochs",type=int,default=10)
