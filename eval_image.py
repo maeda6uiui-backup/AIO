@@ -133,7 +133,7 @@ def create_inputs_embeds_and_token_type_ids(bert_model,input_ids,indices,options
 def simple_accuracy(preds, labels):
     return (preds == labels).mean()
 
-def test(bert_model,bfmc_model,options,im_embeddings_dir,dataloader):
+def evaluate(bert_model,bfmc_model,options,im_embeddings_dir,dataloader):
     bert_model.eval()
     bfmc_model.eval()
 
@@ -219,7 +219,7 @@ def main(test_input_dir,im_embeddings_dir,test_upper_bound,result_save_dir):
         else:
             bfmc_model.load_state_dict(torch.load(parameters_filepath,map_location=torch.device("cpu")))
 
-        pred_labels,correct_labels,accuracy=test(bert_model,bfmc_model,test_options,im_embeddings_dir,test_dataloader)
+        pred_labels,correct_labels,accuracy=evaluate(bert_model,bfmc_model,test_options,im_embeddings_dir,test_dataloader)
 
         logger.info("Accuracy: {}".format(accuracy))
 
